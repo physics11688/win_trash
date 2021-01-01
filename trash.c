@@ -27,11 +27,11 @@ int main(int argc, char *argv[]){
 
     char *usage = "\n---- ファイルをごみ箱に送るコマンド ----\n\n基本的な使い方: trash.exe [ファイル]\n\nオプション:\n\n   \
 -h  trashの説明とオプションを表示\n\n   -v　ゴミ箱に送ったファイルのファイル名を表示\n\n   -l  ゴミ箱GUI表示\n\n   -e  ゴミ箱を空に";
-    int i, opt;
+    int i, opt, v;
     opterr = 0; //　getopt()のエラーメッセージを無効にする。
     
-    opt = getopt(argc, argv, "hlev");
-    // 複数のオプションは取らせない
+    // オプションの解析. 
+    while ((opt = getopt(argc, argv, "hlev")) != -1)  {
     switch (opt) {
         case 'h':  // helpの表示
             puts(usage);
@@ -43,16 +43,21 @@ int main(int argc, char *argv[]){
             emptyTrash();
             return EXIT_SUCCESS;
         case 'v':  //削除したファイルの表示
+            v = TRUE;
             break;
         default:
-            break;
+            puts("存在しないオプションが指定されました");
+            puts("run: trash -h");
+            return EXIT_FAILURE;
         }
+    }
 
 
     if (argv[optind] == NULL) {
         puts("削除したいファイルを引数に渡してください");
         return  EXIT_SUCCESS;
     }
+    
     //オプション以外の引数の処理
     int result;
     for (i = optind; i < argc; i++) {
@@ -71,8 +76,7 @@ int main(int argc, char *argv[]){
             return EXIT_FAILURE;
 
         default:
-            // -vなしなら opt == -1
-            if (opt){
+            if (v == TRUE){
                 printf("削除: %s\n", argv[i]);
             }
             break;
@@ -101,14 +105,6 @@ int mvToTrash(char *path) {
     // strcpyは \0 を末尾に追加するし、第一引数の \0もコピーするので空文字追加でいい。
     strcpy(pszFrom + strlen(path) + 1, "");  // ポインタ演算
 
-    // ファイルの存在確認
-    FILE* fp;
-    if ((fp = fopen(pszFrom, "r")) == NULL) {
-        return 2;
-    }
-    if (fclose(fp) == EOF){
-        return 2;
-    }
 
     /*
     * SHFileOperationAに渡す構造体
