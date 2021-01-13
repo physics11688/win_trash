@@ -21,14 +21,22 @@
 #include <windows.h>   // windows用
 #include <shellapi.h>  // SHFileOperationA, SHEmptyRecycleBinA
 
-uint8_t mvToTrash(char *path);
-uint8_t emptyTrash();
-
+// 引数
 #define help 'h'
 #define list 'l'
 #define empty 'e'
 #define verbose 'v'
 
+uint8_t mvToTrash(char *path);
+bool emptyTrash();
+
+// mvToTrashのステータス
+enum fileop_Status {
+    succes,
+    malloc_err,
+    can_not_trash,
+    terminate,
+};
 
 int main(int argc, char *argv[]) {
     char *usage =
@@ -39,6 +47,7 @@ trash.exe [ファイル]\n\nオプション:\n\n   \
     uint8_t i;
     int8_t opt;
     bool v;
+    bool is_empty;
     opterr = 0;  //　getopt()のエラーメッセージを無効にする。
 
     // オプションの解析.
@@ -51,8 +60,13 @@ trash.exe [ファイル]\n\nオプション:\n\n   \
                 system("start shell:RecycleBinFolder");
                 return EXIT_SUCCESS;
             case empty:  // ゴミ箱を空に
-                emptyTrash();
-                return EXIT_SUCCESS;
+                if ((is_empty = emptyTrash()) == true) {
+                    return EXIT_SUCCESS;
+                } else {
+                    puts("ゴミ箱を空できませんでした");
+                    return EXIT_FAILURE;
+                }
+
             case verbose:  //削除したファイルの表示
                 v = true;
                 break;
@@ -73,16 +87,13 @@ trash.exe [ファイル]\n\nオプション:\n\n   \
     uint8_t result;
     for (i = optind; i < argc; i++) {
         switch (result = mvToTrash(argv[i])) {
-            case 1:
+            case malloc_err:
                 puts("メモリ確保に失敗しました");
                 return EXIT_FAILURE;
-            case 2:
-                puts("ファイルの存在確認に失敗しました");
-                return EXIT_FAILURE;
-            case 3:
+            case can_not_trash:
                 printf("削除失敗: %s\n", argv[i]);
                 return EXIT_FAILURE;
-            case 4:
+            case terminate:
                 puts("trashは強制終了しました");
                 return EXIT_FAILURE;
 
@@ -102,9 +113,10 @@ uint8_t mvToTrash(char *path) {
     // path + '\0'のメモリ確保
     // strlenの返すバイト長は'\0'を含まないもの
     char *pszFrom = (char *)malloc(strlen(path) + 2 * sizeof('\0'));
+
     if (pszFrom == NULL) {
         perror("malloc:");
-        return 1;
+        return malloc_err;
     }
 
     // pathのコピー . strcpyは \0 を末尾に追加する。
@@ -148,19 +160,21 @@ uint8_t mvToTrash(char *path) {
         free(pszFrom);
     }
 
+    // 移動失敗
     if (return_code != 0) {
-        return 3;
+        return can_not_trash;
     }
 
+    // 強制終了
     if (FileOp.fAnyOperationsAborted) {
-        return 4;
+        return terminate;
     }
 
-    return 0;
+    return succes;
 }
 
 // ゴミ箱を空にする関数
-uint8_t emptyTrash() {
+bool emptyTrash() {
     // ウィンドウハンドルを表わすのに用いるポインタ
     HWND hwd = NULL;
 
@@ -179,8 +193,8 @@ uint8_t emptyTrash() {
     HRESULT ok = SHEmptyRecycleBinA(hwd, drive, flag);
 
     if (ok != S_OK) {
-        return 1;
+        return false;
     } else {
-        return 0;
+        return true;
     }
 }
