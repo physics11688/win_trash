@@ -1,5 +1,5 @@
 /*
-   trashコマンドのオプションは以下:
+   ########## trashコマンドのオプションは以下: ###########
 
    -h  trashの説明とオプションを表示
 
@@ -9,6 +9,19 @@
 
    -e ゴミ箱を空に
 
+   ########## ビルドと使用方法 #############define
+
+   1. このソースをダウンロード
+   2. ターミナルでフォルダを作る        : mkdir -p $HOME\local\bin
+   3. ターミナルでビルド               : gcc -std=c11 -Wall -Wextra
+   -fexec-charset=cp932 trash.c -o $HOME\local\bin\trash.exe
+   4. プロファイルがあるか確認          :Test-Path $profile
+   5. 4.がFalseなら(Trueなら6に進む) →  :New-Item -path $profile -type file
+   -force
+   6. エイリアスの設定                  : echo 'Set-Alias rm
+   "$HOME\local\bin\trash.exe"' >> $profile
+   7. プロファイルの再読み込み          : . $profile
+   8. rm -h とかしてみる
 */
 
 #include <stdio.h>
@@ -149,8 +162,8 @@ uint8_t mvToTrash(char *path) {
     // 終わりを示すために\0\0が末尾に必要
     FileOp.pFrom = pszFrom;
     // 使わないのでNULL
-    FileOp.pTo    = "\0\0";
-    FileOp.fFlags = FOF_SILENT | FOF_ALLOWUNDO | FOF_RENAMEONCOLLISION;
+    FileOp.pTo               = "\0\0";
+    FileOp.fFlags            = FOF_SILENT | FOF_ALLOWUNDO | FOF_RENAMEONCOLLISION;
     FileOp.lpszProgressTitle = NULL;
 
 
