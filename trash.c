@@ -1,28 +1,16 @@
 /*
-   ########## trashコマンドのオプションは以下: ###########
-
-   -h  trashの説明とオプションを表示
-
-   -v　ゴミ箱に送ったファイルのファイル名を表示
-
-   -l ゴミ箱GUI表示
-
-   -e ゴミ箱を空に
-
-   ########## ビルドと使用方法 #############define
-
-   1. このソースをダウンロード
-   2. ターミナルでフォルダを作る        : mkdir -p $HOME\local\bin
-   3. ターミナルでビルド               : gcc -std=c11 -Wall -Wextra
-   -fexec-charset=cp932 trash.c -o $HOME\local\bin\trash.exe
-   4. プロファイルがあるか確認          :Test-Path $profile
-   5. 4.がFalseなら(Trueなら6に進む) →  :New-Item -path $profile -type file
-   -force
-   6. エイリアスの設定                  : echo 'Set-Alias rm
-   "$HOME\local\bin\trash.exe"' >> $profile
-   7. プロファイルの再読み込み          : . $profile
-   8. rm -h とかしてみる
-*/
+ *  ########## trashコマンドのオプションは以下: ###########
+ *
+ *  -h  trashの説明とオプションを表示
+ *
+ *  -v　ゴミ箱に送ったファイルのファイル名を表示
+ *
+ *  -l ゴミ箱GUI表示
+ *
+ *  -e ゴミ箱を空に
+ *
+ *  Author: physics11688 - 15.12.2022
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +49,7 @@ trash.exe [ファイル]\n\nオプション:\n\n   \
     int8_t opt;
     bool v;
     bool is_empty;
-    opterr = 0;  //　getopt()のエラーメッセージを無効にする。
+    opterr = 0;  // 　getopt()のエラーメッセージを無効にする。
 
     // オプションの解析.
     while ((opt = getopt(argc, argv, "hlev")) != -1) {
@@ -80,7 +68,7 @@ trash.exe [ファイル]\n\nオプション:\n\n   \
                     return EXIT_FAILURE;
                 }
 
-            case verbose:  //削除したファイルの表示
+            case verbose:  // 削除したファイルの表示
                 v = true;
                 break;
             default:
@@ -96,7 +84,7 @@ trash.exe [ファイル]\n\nオプション:\n\n   \
         return EXIT_SUCCESS;
     }
 
-    //オプション以外の引数の処理
+    // オプション以外の引数の処理
     uint8_t result;
     for (i = optind; i < argc; i++) {
         switch (result = mvToTrash(argv[i])) {
