@@ -1,0 +1,30 @@
+name: Build and Release trash.exe
+
+on:
+  push:
+    tags:
+      - 'v*'  # v1.0.0 などのタグでトリガー
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Install MinGW
+        run: choco install mingw -y
+
+      - name: Build EXE
+        run: gcc -std=c11 -Wall -Wextra -fexec-charset=cp932 trash.c -o trash.exe
+
+      - name: Zip EXE
+        run: powershell Compress-Archive -Path trash.exe -DestinationPath trash.zip
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: trash.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
